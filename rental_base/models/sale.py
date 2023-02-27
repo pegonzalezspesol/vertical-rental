@@ -11,14 +11,12 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     default_start_date = fields.Date(
-        string="Default Start Date",
         compute="_compute_default_start_date",
         readonly=False,
         store=True,
     )
 
     default_end_date = fields.Date(
-        string="Default End Date",
         compute="_compute_default_end_date",
         readonly=False,
         store=True,
@@ -115,15 +113,14 @@ class SaleOrderLine(models.Model):
                 if line.rental_qty != line.extension_rental_id.rental_qty:
                     raise ValidationError(
                         _(
-                            "On the sale order line with rental service %s, "
-                            "you are trying to extend a rental with a rental "
-                            "quantity (%s) that is different from the quantity "
-                            "of the original rental (%s). This is not supported."
-                        )
-                        % (
-                            line.product_id.name,
-                            line.rental_qty,
-                            line.extension_rental_id.rental_qty,
+                            "On the sale order line with rental service "
+                            "%(product_name)s, you are trying to extend a rental with "
+                            "a rental quantity (%(rental_qty)s) that is different "
+                            "from the quantity of the original rental "
+                            "(%(ext_rental_qty)s). This is not supported.",
+                            product_name=line.product_id.name,
+                            rental_qty=line.rental_qty,
+                            ext_rental_qty=line.extension_rental_id.rental_qty,
                         )
                     )
             if line.rental_type in ("new_rental", "rental_extension"):
@@ -139,15 +136,13 @@ class SaleOrderLine(models.Model):
                 if line.product_uom_qty != line.sell_rental_id.rental_qty:
                     raise ValidationError(
                         _(
-                            "On the sale order line with product %s "
-                            "you are trying to sell a rented product with a "
-                            "quantity (%s) that is different from the rented "
-                            "quantity (%s). This is not supported."
-                        )
-                        % (
-                            line.product_id.name,
-                            line.product_uom_qty,
-                            line.sell_rental_id.rental_qty,
+                            "On the sale order line with product %(product_name)s you "
+                            "are trying to sell a rented product with a quantity "
+                            "(%(product_qty)s) that is different from the rented "
+                            "quantity (%(sell_rental_qty)s). This is not supported.",
+                            product_name=line.product_id.name,
+                            product_qty=line.product_uom_qty,
+                            sell_rental_qty=line.sell_rental_id.rental_qty,
                         )
                     )
 
@@ -293,14 +288,15 @@ class SaleOrderLine(models.Model):
                 if messages:
                     messages.append(
                         _(
-                            "\nOrder: %s\n"
-                            "Line with product: '%s'\n\n"
+                            "\nOrder: %(order_name)s\n"
+                            "Line with product: '%(product_full_name)s'\n\n"
                             "Please use instead the button 'Update Times' "
                             "in the order to correctly update the order "
                             "line's times, its timeline entry, contract and "
-                            "its stock moves and pickings as required."
+                            "its stock moves and pickings as required.",
+                            order_name=sol.order_id.name,
+                            product_full_name=sol.product_id.display_name,
                         )
-                        % (sol.order_id.name, sol.product_id.display_name)
                     )
                     raise exceptions.UserError("\n".join(messages))
         return super(SaleOrderLine, self).write(values)

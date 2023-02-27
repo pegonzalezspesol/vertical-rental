@@ -53,12 +53,7 @@ class TestUpdateTimeRentalOrder(RentalStockCommon):
         )
         wizard_1 = (
             self.env["update.sale.line.date"]
-            .with_context(
-                {
-                    "active_model": "sale.order",
-                    "active_ids": rental_order_1.ids,
-                }
-            )
+            .with_context(active_model="sale.order", active_ids=rental_order_1.ids)
             .create(
                 {
                     "order_id": rental_order_1.id,
@@ -114,12 +109,7 @@ class TestUpdateTimeRentalOrder(RentalStockCommon):
         )
         wizard_2 = (
             self.env["update.sale.line.date"]
-            .with_context(
-                {
-                    "active_model": "sale.order",
-                    "active_ids": rental_order_1.ids,
-                }
-            )
+            .with_context(active_model="sale.order", active_ids=rental_order_1.ids)
             .create(
                 {
                     "order_id": rental_order_1.id,
