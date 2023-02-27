@@ -1,7 +1,3 @@
-
-Usage
------
-
 To use this module, you need to:
 
 #. Go to Rental Orders and create a new one.

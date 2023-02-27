@@ -5,7 +5,6 @@ from odoo import _, api, exceptions, fields, models
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
-    @api.multi
     def action_check_rental_availability(self):
         for order in self:
             for line in order.order_line:
@@ -25,14 +24,13 @@ class SaleOrderLine(models.Model):
     )
 
     # (override) _check_rental_availability in module rental_pricelist
-    @api.multi
     def _check_rental_availability(self):
         self.ensure_one()
         res = {}
         if not self.start_date or not self.end_date or not self.rental_qty:
             return {}
         total_qty = self.product_id.rented_product_id.with_context(
-            {"location": self.order_id.warehouse_id.rental_view_location_id.id}
+            location=self.order_id.warehouse_id.rental_view_location_id.id
         ).qty_available
         max_ol_qty = self._get_max_overlapping_rental_qty()
         avail_qty = total_qty - max_ol_qty
@@ -47,14 +45,12 @@ class SaleOrderLine(models.Model):
             res["warning"] = {
                 "title": _("Not enough stock!"),
                 "message": _(
-                    "You want to rent %.2f %s but you only "
-                    "have %.2f %s available in the selected period."
-                )
-                % (
-                    self.rental_qty,
-                    self.product_id.rented_product_id.uom_id.name,
-                    avail_qty,
-                    self.product_id.rented_product_id.uom_id.name,
+                    "You want to rent %(rental_qty).2f %(rental_product)s but you "
+                    "only have %(avail_qty).2f %(rental_product)s available in the "
+                    "selected period.",
+                    rental_qty=self.rental_qty,
+                    rental_product=self.product_id.rented_product_id.uom_id.name,
+                    avail_qty=avail_qty,
                 ),
             }
         else:
@@ -70,7 +66,6 @@ class SaleOrderLine(models.Model):
             res = self._check_rental_availability()
         return res
 
-    @api.multi
     def _get_concurrent_order_lines(self):
         self.ensure_one()
         domain = []
@@ -90,7 +85,6 @@ class SaleOrderLine(models.Model):
         res = self.search(domain)
         return res
 
-    @api.multi
     def _get_concurrent_orders(self):
         self.ensure_one()
         sols = self._get_concurrent_order_lines()
@@ -103,7 +97,6 @@ class SaleOrderLine(models.Model):
             "sale_order_ids": quotations.ids + orders.ids,
         }
 
-    @api.multi
     def action_view_concurrent_orders(self):
         self.ensure_one()
         record_ids = self._get_concurrent_orders()["sale_order_ids"]
@@ -113,7 +106,6 @@ class SaleOrderLine(models.Model):
             return action
         raise exceptions.UserError(_("No found concurrent Rental Order/Quotation(s)."))
 
-    @api.multi
     def _get_max_overlapping_rental_qty(self):
         self.ensure_one()
         lines = self._get_concurrent_order_lines()
@@ -126,7 +118,7 @@ class SaleOrderLine(models.Model):
                     ("end_date", ">=", line.start_date),
                 ]
             )
-            tmp_qty = sum(l.rental_qty for l in ol_lines)
+            tmp_qty = sum(ol.rental_qty for ol in ol_lines)
             if tmp_qty > max_qty:
                 max_qty = tmp_qty
             ol_lines = self.search(
@@ -136,7 +128,7 @@ class SaleOrderLine(models.Model):
                     ("end_date", ">=", line.end_date),
                 ]
             )
-            tmp_qty = sum(l.rental_qty for l in ol_lines)
+            tmp_qty = sum(ol.rental_qty for ol in ol_lines)
             if tmp_qty > max_qty:
                 max_qty = tmp_qty
         return max_qty

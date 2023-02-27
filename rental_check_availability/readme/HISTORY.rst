@@ -1,7 +1,3 @@
-
-Changelog
----------
-
 - 1e549e87 2022-05-04 12:56:56 +0200 wagner@elegosoft.com  (origin/feature_2832_blp7_new_logos_v12, feature_2832_blp7_new_logos_v12) update doc (issue #3613, issue #4016)
 - eee26e11 2022-05-04 12:20:20 +0200 wagner@elegosoft.com  add missing README.rst files (issue #4016)
 - 02eb49c8 2022-05-04 12:18:32 +0200 wagner@elegosoft.com  update doc (issue #4016)

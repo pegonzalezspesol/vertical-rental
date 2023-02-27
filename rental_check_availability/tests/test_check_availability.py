@@ -39,11 +39,7 @@ class TestRentalCheckAvailability(RentalStockCommon):
     def create_rental_order(self, start_date, end_date, qty):
         rental_order = (
             self.env["sale.order"]
-            .with_context(
-                {
-                    "default_type_id": self.rental_sale_type.id,
-                }
-            )
+            .with_context(default_type_id=self.rental_sale_type.id)
             .create(
                 {
                     "warehouse_id": self.warehouse0.id,
@@ -54,11 +50,7 @@ class TestRentalCheckAvailability(RentalStockCommon):
         )
         line = (
             self.env["sale.order.line"]
-            .with_context(
-                {
-                    "type_id": self.rental_sale_type.id,
-                }
-            )
+            .with_context(type_id=self.rental_sale_type.id)
             .new(
                 {
                     "order_id": rental_order.id,
@@ -84,7 +76,7 @@ class TestRentalCheckAvailability(RentalStockCommon):
         # RO 5  (qty: 3)    today - 2 (order)
         # RO 6  (qty: 1)              5 --------- 15 (none)
         msg = (
-            "You want to rent 3.00 Unit(s) but you only have 2.00 Unit(s) "
+            "You want to rent 3.00 Units but you only have 2.00 Units "
             "available in the selected period."
         )
         expected_warning = {
