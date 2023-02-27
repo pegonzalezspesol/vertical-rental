@@ -34,6 +34,7 @@
                     attrs="{'required': [('display_type', '=', False)]}"
                     context="{'type_id': parent.type_id}"
                 />
+                <field name="product_id" />
                 <field name="rental_ok" invisible="1" />
             </xpath>
             <xpath expr="//group[@id='rental_settings']" position="attributes">

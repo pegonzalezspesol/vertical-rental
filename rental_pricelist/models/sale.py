@@ -69,6 +69,7 @@ class SaleOrderLine(models.Model):
     def onchange_display_product_id(self):
         if self.display_product_id:
             self.product_id = self.display_product_id
+            self.product_uom = self.display_product_id.uom_id
             if self.display_product_id.rental:
                 self.rental = True
             self.rental = False
@@ -125,19 +126,15 @@ class SaleOrderLine(models.Model):
             res["warning"] = {
                 "title": _("Not enough stock!"),
                 "message": _(
-                    "You want to rent %.2f %s but you only "
-                    "have %.2f %s currently available on the "
-                    'stock location "%s"! Make sure that you '
-                    "get some units back in the meantime or "
-                    're-supply the stock location "%s".'
-                )
-                % (
-                    self.rental_qty,
-                    self.product_id.rented_product_id.uom_id.name,
-                    in_location_available_qty,
-                    self.product_id.rented_product_id.uom_id.name,
-                    rental_in_location.name,
-                    rental_in_location.name,
+                    "You want to rent %(rental_qty).2f %(rented_product_uom)s but you "
+                    "only have %(available_qty).2f %(rented_product_uom)s currently "
+                    'available on the stock location "%(location)s"! Make sure that '
+                    "you get some units back in the meantime or re-supply the stock "
+                    'location "%(location)s".',
+                    rental_qty=self.rental_qty,
+                    rented_product_uom=self.product_id.rented_product_id.uom_id.name,
+                    available_qty=in_location_available_qty,
+                    location=rental_in_location.name,
                 ),
             }
         return res
@@ -199,15 +196,15 @@ class SaleOrderLine(models.Model):
                 if line.rental_qty != line.extension_rental_id.rental_qty:
                     raise ValidationError(
                         _(
-                            "On the sale order line with rental service %s, "
-                            "you are trying to extend a rental with a rental "
-                            "quantity (%s) that is different from the quantity "
-                            "of the original rental (%s). This is not supported."
-                        )
-                        % (
-                            line.product_id.name,
-                            line.rental_qty,
-                            line.extension_rental_id.rental_qty,
+                            "On the sale order line with rental service %(product)s, "
+                            "you are trying to extend a rental with a rental quantity "
+                            "(%(rental_qty)s) that is different from the "
+                            "quantity "
+                            "of the original rental (%(ext_rental_qty)s). This is not "
+                            "supported.",
+                            product=line.product_id.name,
+                            rental_qty=line.rental_qty,
+                            ext_rental_qty=line.extension_rental_id.rental_qty,
                         )
                     )
             if line.rental_type in ("new_rental", "rental_extension"):
@@ -223,15 +220,13 @@ class SaleOrderLine(models.Model):
                 if line.product_uom_qty != line.sell_rental_id.rental_qty:
                     raise ValidationError(
                         _(
-                            "On the sale order line with product %s "
+                            "On the sale order line with product %(product)s "
                             "you are trying to sell a rented product with a "
-                            "quantity (%s) that is different from the rented "
-                            "quantity (%s). This is not supported."
-                        )
-                        % (
-                            line.product_id.name,
-                            line.product_uom_qty,
-                            line.sell_rental_id.rental_qty,
+                            "quantity (%(uom_qty)s) that is different from the rented "
+                            "quantity (%(sell_rental_qty)s). This is not supported.",
+                            product=line.product_id.name,
+                            uom_qty=line.product_uom_qty,
+                            sell_rental_qty=line.sell_rental_id.rental_qty,
                         )
                     )
 
@@ -258,10 +253,7 @@ class SaleOrderLine(models.Model):
         res = super(SaleOrderLine, self).product_id_change()
         if self.rental:
             if self.display_product_id.rental:
-                if "domain" not in res:
-                    res["domain"] = {}
                 uom_ids = self._get_product_rental_uom_ids()
-                res["domain"]["product_uom"] = [("id", "in", uom_ids)]
                 if uom_ids and self.product_uom.id not in uom_ids:
                     self.product_uom = uom_ids[0]
         return res
